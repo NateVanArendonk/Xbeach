@@ -3,9 +3,18 @@ addpath C:\Users\ahooshmand\Desktop\Xbeach\XBeach_Codes
 addpath C:\Functions_Matlab
 addpath C:\Functions_Matlab\mapping\kml
 
+% ---------- INPUTS ---------------------------------------------------
+
 % ---------- Folder of DEM & DEM Name
 dem_fol = 'E:\Abbas\Modeling Resources\PS_DEM\Ruston_Way\CONED\';
 fname = 'ruston_ascii.asc';
+
+% ---------- Name of Folder to house bathy transects
+transect_folder = 'Owen_Beach_TransectBathy';
+
+% ---------- Location of KKL - Load and Convert to UTM if necessary 
+kml_fol = 'C:\Users\ahooshmand\Desktop\PS_COSMOS\Thesis_Modeling\KML\RunupTransects\OwenBeach\';
+kmls = dir('C:\Users\ahooshmand\Desktop\PS_COSMOS\Thesis_Modeling\KML\RunupTransects\OwenBeach\*.kml');
 
 % ---------- Limits for Subsetting DEM - Optional
 lim.lx = 5.33*10^5;
@@ -13,13 +22,14 @@ lim.ly = 5.2385*10^6;
 lim.rx = 5.375*10^5;
 lim.ry = 5.2426*10^6;
 
+
+% ---------------------- PROCESS
+
 % ---------- Read in DEM
 xyz = readBathy2vars([dem_fol fname],lim);  
 
-% ---------- Location of KKL - Load and Convert to UTM if necessary 
-kml_fol = 'C:\Users\ahooshmand\Desktop\PS_COSMOS\Thesis_Modeling\KML\RunupTransects\OwenBeach\';
-kmls = dir('C:\Users\ahooshmand\Desktop\PS_COSMOS\Thesis_Modeling\KML\RunupTransects\OwenBeach\*.kml');
-utm = 1;
+% Loop over transects, load and save in T
+utm = 1; % On/off switch. 1-convert to UTM, 0-already in UTM
 for ii = 1:length(kmls)
     kml_nm = kmls(ii).name;
     temp = kml2struct([kml_fol kml_nm]); % load in KML of Transect
@@ -36,9 +46,6 @@ clear kml_fol kmls kml_nm
 x = xyz(:,1);
 y = xyz(:,2);
 z = xyz(:,3);
-
-% ---------- Name of Folder to house bathy transects
-transect_folder = 'Owen_Beach_TransectBathy';
 
 % ---------- Create bathy-transects for each transect of KML
 for ii = 1:length(T)
@@ -77,7 +84,7 @@ for ii = 1:length(T)
     % Smooth the elevation data along transect
     T(ii).line_z = smoothn(T(ii).line_z);
     
-    % Make Along Transect Grid
+    % Make Along Transect coordinate, s
     T(ii).s = sqrt(T(ii).line_x.^2+T(ii).line_x.^2);
     T(ii).s = T(ii).s - min(T(ii).s);    
     clear t_x t_y t_z

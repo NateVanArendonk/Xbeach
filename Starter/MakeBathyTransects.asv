@@ -3,9 +3,18 @@ addpath C:\Users\ahooshmand\Desktop\Xbeach\XBeach_Codes
 addpath C:\Functions_Matlab
 addpath C:\Functions_Matlab\mapping\kml
 
+% ---------- INPUTS ---------------------------------------------------
+
 % ---------- Folder of DEM & DEM Name
 dem_fol = 'E:\Abbas\Modeling Resources\PS_DEM\Ruston_Way\CONED\';
 fname = 'ruston_ascii.asc';
+
+% ---------- Name of Folder to house bathy transects
+transect_folder = 'Owen_Beach_TransectBathy';
+
+% ---------- Location of KKL - Load and Convert to UTM if necessary 
+kml_fol = 'C:\Users\ahooshmand\Desktop\PS_COSMOS\Thesis_Modeling\KML\RunupTransects\OwenBeach\';
+kmls = dir('C:\Users\ahooshmand\Desktop\PS_COSMOS\Thesis_Modeling\KML\RunupTransects\OwenBeach\*.kml');
 
 % ---------- Limits for Subsetting DEM - Optional
 lim.lx = 5.33*10^5;
@@ -13,13 +22,14 @@ lim.ly = 5.2385*10^6;
 lim.rx = 5.375*10^5;
 lim.ry = 5.2426*10^6;
 
+
+% ---------------------- PROCESS
+
 % ---------- Read in DEM
 xyz = readBathy2vars([dem_fol fname],lim);  
 
-% ---------- Location of KKL - Load and Convert to UTM if necessary 
-kml_fol = 'C:\Users\ahooshmand\Desktop\PS_COSMOS\Thesis_Modeling\KML\RunupTransects\OwenBeach\';
-kmls = dir('C:\Users\ahooshmand\Desktop\PS_COSMOS\Thesis_Modeling\KML\RunupTransects\OwenBeach\*.kml');
-utm = 1;
+% Loop over transects, load and save in T
+utm = 1; % On/off switch. 1-convert to UTM, 0-already in UTM
 for ii = 1:length(kmls)
     kml_nm = kmls(ii).name;
     temp = kml2struct([kml_fol kml_nm]); % load in KML of Transect
@@ -37,16 +47,13 @@ x = xyz(:,1);
 y = xyz(:,2);
 z = xyz(:,3);
 
-% ---------- Name of Folder to house bathy transects
-transect_folder = 'Owen_Beach_TransectBathy';
-
 % ---------- Create bathy-transects for each transect of KML
 for ii = 1:length(T)
     
     % Set resolution of transect
     ds = 1; %[m]
     
-    % Create transect
+    % Create finely spaced transect along extent of KML transect
     [ T(ii).line_x, T(ii).line_y ] = createTransect(T(ii).x_utm(1),T(ii).y_utm(1),T(ii).x_utm(2),T(ii).y_utm(2),ds);
 
     % Extract subset of depths that covers transect
@@ -58,7 +65,7 @@ for ii = 1:length(T)
  
     % Find nearest depth for each location on transect
     tic
-    T(ii).line_z = zeros(size(T(ii).line_x)); % DEM Line
+    T(ii).line_z = zeros(size(T(ii).line_x)); 
     for jj = 1:length(T(ii).line_x)
         dist = (T(ii).line_x(jj)-t_x).^2 + (T(ii).line_y(jj)-t_y).^2;
         [~, I] = min(dist);
